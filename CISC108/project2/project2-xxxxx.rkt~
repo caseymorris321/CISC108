@@ -1,0 +1,269 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname project2-xxxxx) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+;;Project 2a: Snake
+; Name: Casey Morris
+; Name: Muhan Yu
+(require 2htdp/image)
+(require 2htdp/universe)
+;********************************
+(define SCENE-WIDTH 100)
+(define SCENE-HEIGHT 100)
+(define BACKGROUND
+  (empty-scene SCENE-WIDTH SCENE-HEIGHT "black"))
+(define SNAKE-IMAGE (circle 5 "solid" "red"))
+(define FOOD-IMAGE (circle 5 "solid" "green"))
+(define STEP 1)
+;*********************************
+(define-struct snake [direction alive? pos-x pos-y image])
+#|
+A Snake is a (make-snake Number Number String Image Boolean
+interpretation:
+ Number x : the horizontal position of the snake
+ Number y : the vertical position (0 = top)
+ String direction : the direction the snake is facing which is one of
+  "up"
+  "down"
+  "left"
+  "right"
+ Image image : the image of the snake
+Bolean alive? : #true if the snake is alive and #false if not
+Constructor:
+ make-snake : Number Number String Image Boolean -> Snake
+Selectors:
+ snake-x : Snake -> Number
+ snake-y : Snake -> Number
+ snake-direction : Snake -> String
+ snake-image : Snake -> Image
+ snake-alive? : Snake -> Boolean
+Type:
+ Any -> Boolean
+Template for function consuming a Snake:
+(define (snake-fun a-snake)
+ ... (snake-x a-snake) ...
+ ... (snake-y a-snake) ...
+ ... (snake-direction a-snake) ...
+ ... (snake-image a-snake) ...
+ ... (snake-alive? a-snake) ...)
+|#
+
+(define SNAKE0 (make-snake "right" #true (random 100) (random 100) SNAKE-IMAGE))
+
+;**************************************************
+;; A Food Type is one of:
+;; "normal"
+;; "foody"
+;; ...
+
+(define-struct food (alive? image type score pos-x pos-y))
+#|interpretation:
+ Boolean alive? : #true if the food is alive #false if not
+ Image image : the image of the food
+ String type : the type of food 
+ Number score : the score for different types of food
+ Number x : the x coordinate of food
+ Number y : the y coordinate of food
+|#
+(define FOOD0 (make-food #true FOOD-IMAGE "normal" 1 (random 100) (random 100)))
+;**************************************************
+(define-struct snakeworld (snake-list food-list score))
+#|interpretation:
+ Snake snake : a Snake
+ List food-list : 
+ Number score : 
+|#
+(define SNAKEWORLD1 (make-snakeworld (list SNAKE0) (list FOOD0 FOOD0 FOOD0) 0))
+
+;;---------------------------------RENDERING--------------------------------------------
+(define (place-snake a-snake bg)
+  (place-image
+   (snake-image a-snake)
+   (snake-pos-x a-snake)
+   (snake-pos-y a-snake)
+   bg))
+
+(define (place-food a-food bg)
+  (place-image
+   (food-image a-food)
+   (food-pos-x a-food)
+   (food-pos-y a-food)
+   bg))
+
+;; A List-of-Snakes (LOS) is one of
+;;   - empty
+;;   - (cons Snake LOS)
+#|
+(define (list-of-snakes-fun LOS)
+  (cond
+    [(empty? LOS) ...]
+    [(cons? LOS) ... (first LOS) ...
+                   ... (list-of-snakes-fun (rest LOS)) ...]))
+|#
+(define LOS1 empty)
+(define LOS2 (cons SNAKE0 LOS1))
+
+(check-expect (render-snakes LOS2 BACKGROUND) (place-snake (first LOS2)
+                                                           (render-snakes (rest LOS2) BACKGROUND)))
+(define (render-snakes LOS scene)
+  (cond [(empty? LOS) scene]
+        [else (place-snake (first LOS)
+                           (render-snakes (rest LOS) scene))]))
+
+;; A List-of-Foods (LOF) is one of
+;;   - empty
+;;   - (cons Food LOF)
+#|
+(define (list-of-food-fun LOF)
+  (cond
+    [(empty? LOF) ...]
+    [(cons? LOF) ... (first LOF) ...
+                   ... (list-of-foods-fun (rest LOF)) ...]))
+|#
+(define LOF1 empty)
+(define LOF2 (cons FOOD0 LOF1))
+
+(check-expect (render-food LOF2 BACKGROUND) (place-food (first LOF2)
+                                                        (render-food (rest LOF2) BACKGROUND)))
+(define (render-food LOF scene)
+  (cond [(empty? LOF) scene]
+        [else (place-food (first LOF)
+                          (render-food (rest LOF) scene))]))
+(check-expect (render-world SNAKEWORLD1) (render-snakes(snakeworld-snake-list SNAKEWORLD1)
+                                                         (render-food(snakeworld-food-list SNAKEWORLD1)
+                                                                     BACKGROUND)))
+(define (render-world state)
+  (render-snakes(snakeworld-snake-list state)
+                (render-food(snakeworld-food-list state) 
+                            BACKGROUND)))
+
+;;inside?:Snake->Boolean
+;;Consumes:
+;;A Snake: asnake
+;;Produces:
+;; #true if the snake is not going to hit the wall
+#|
+(check-expect (inside? (make-snake "left" #true 70 56 SNAKE-IMAGE
+                                   (make-snake "left" #true 71 56 SNAKE-IMAGE #false))) #true)
+(define (inside? asnake)
+    (cond
+    [(false? asnake) #true]
+    [(snake? asnake)
+     (local
+    [(define x (snake-pos-x asnake))
+     (define y (snake-pos-y asnake))]
+       (if (or  (< x 0)
+                (> x 100)
+                (< y 0)
+                (> y 100))
+           #false
+           (inside? (snake-node-snake asnake))))]))
+|#
+;;eat-food:Snakeworld->Snakeworld
+;;Consumes:
+;; A Snakeworld: aworld
+;;Produces:
+;; The updated snakeworld
+#|
+(define (eat-food aworld)
+  (local [(define snake (snakeworld-snake aworld))
+          (define score (snakeworld-score aworld))]
+    (make-snakeworld )
+|#
+;;update: Snakeworld->Snakeworld
+;;Consumes:
+;;A snakeworld
+;;Produces:
+;; A right Snakeworld when the state changed
+#|(define (update bt)
+  (cond
+    [(false? bt) ... ]
+    [(node? bt)  ... (node-social bt) ....
+           ... (node-name bt) ....
+           ... (bt-fun (node-left bt)) ...
+           ... (bt-fun (node-right bt)) ... ]))|#
+
+;;render-snake: Snake->Image
+;;Consumes:
+;; A Snake: asnake
+;;Produces:
+;; the image with snake in the right postion in scene
+
+#|(define (render-snake asnake)
+  (cond
+    [(false? asnake) ]
+    [(snake? asnake)
+     ... (node-social bt) ....
+           ... (node-name bt) ....
+           ... (bt-fun (node-left bt)) ...
+           ... (bt-fun (node-right bt)) ... ]))|#
+
+;;render-food: Snakeworld->Image
+;;render-scene: Snakeworld->Image
+
+;;handle-key-snake: Snake Key-> Snake
+;;Consumes:
+;; A Snake: asnake
+;; Key : akey
+;;Produces:
+;; An updated Snake based on the pressed key
+#|
+(check-expect (handle-key-snake (make-snake "right" #true 0 0 SNAKE-IMAGE #false) "up")
+              (make-snake "up" #true 0 1 SNAKE-IMAGE #false))
+(define (handle-key-snake asnake akey)
+  (cond
+    [(false? asnake) #false]
+    [(snake? asnake)
+  (local
+     [(define image (snake-image asnake))
+     (define pos-x (snake-pos-x asnake))
+     (define pos-y (snake-pos-y asnake))
+     (define alive? (snake-alive? asnake))]
+    (make-snake
+              akey
+              alive?
+              (cond
+                [(key=? akey "left") (- (snake-pos-x asnake) 1)]
+                [(key=? akey "right") (+ (snake-pos-x asnake) 1)]
+                [else (snake-pos-x asnake)])
+              (cond
+                [(key=? akey "up") (+ (snake-pos-y asnake) 1)]
+                [(key=? akey "down") (- (snake-pos-y asnake) 1)]
+                [else (snake-pos-y asnake)])
+              image
+              (handle-key-snake (snake-node-snake asnake) akey)))]))
+          |#
+
+;;handle-key: Snakeworld Key-> Snakeworld
+;;Consumes:
+;; A Snakeworld: aworld
+;; A Key: akey
+;;Produces:
+;; An updated Snakeworld
+#|
+(check-expect (handle-key (make-snakeworld
+                           (make-snake "up" #true 0 1 SNAKE-IMAGE #false)
+                           (list FOOD0 FOOD0 FOOD0)
+                           0) "up")
+              (make-snakeworld  (make-snake "up" #true 0 2 SNAKE-IMAGE #false)  (list FOOD0 FOOD0 FOOD0)
+                           0)) 
+(define (handle-key aworld akey)
+  (local
+    [(define snake (snakeworld-snake aworld))
+     (define lof (snakeworld-food-list aworld))
+     (define score (snakeworld-score aworld))]
+    (make-snakeworld
+   (handle-key-snake snake akey)
+   lof score)))
+|#
+;; run : Any -> Snakeworld
+;; Consumes:
+;;   Any ignore : ignored parameters for now
+;; Launches the interactive programs using WORLD-1 as initial state.
+#|(define (run ignore)
+  (big-bang
+   WORLD-1
+   (on-tick handle-tick CHANGE-FREQUENCY)
+   (on-key handle-key)
+   (to-draw render-scene)))
+
+(run 0)|#

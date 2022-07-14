@@ -1,0 +1,55 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-reader.ss" "lang")((modname exampractice2015) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+#|
+Many statistical functions require computing the square of the difference between an
+observed value x and the mean value μ. Design a function sqrdev that consumes both
+an observed value and a mean, and computes (x - μ)2. Your solution should include
+the function signature, purpose statement, unit test(s), and complete function
+definition. You must also include the data definitions for any non-builtin types you
+require, however examples and templates for such data definitions are not required.
+Only the comments that actually define the new type(s) are required.
+|#
+;; sqrdev: Number Number -> Number
+;; Consumes :
+;;  Number x
+;;  Number u
+;; Produces :
+;;  The square of the difference between x and u
+
+(check-expect (sqrdev 5 2) 9)
+(define (sqrdev x u)
+  (sqr (- x u)))
+
+#|
+Design a function convert-to-dollars that consumes (1) a Number amount and (2) a
+String currency, which is one of "euro",	"pound", or "yen". The amount represents
+some amount of money in the specified currency. The function returns the equivalent
+amount in dollars.
+Use the following conversion rates:
+• one euro = $1.28
+• one pound = $1.52
+• one yen = $0.0083
+Your solution should include the function signature, purpose statement, unit
+test(s), and complete function definition. You must also include the data definitions
+for any non-builtin types you require, however examples and templates for such data
+definitions are not required. Only the comments that actually define the new type(s) are
+required.
+|#
+
+;; convert-to-dollars: Number String -> Number
+;; Consumes:
+;;   Number num the amount of money
+;;   String cur represents some amount of money in the specified currency 
+;; Produces:
+;;   The equivalent amount of currency converted to dollars
+(check-expect (convert-to-dollars 1 "euro") 1.28)
+(check-expect (convert-to-dollars 1 "pound") 1.52)
+(check-expect (convert-to-dollars 1 "yen") 0.0083)
+
+(define (convert-to-dollars num cur)
+  (cond
+    [(string=? cur "euro") (* num 1.28)]
+    [(string=? cur "pound") (* num 1.52)]
+    [(string=? cur "yen") (* num 0.0083)]))
+
